@@ -1,0 +1,1592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TurboSafe: Wind Farm Safety System</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #0A1628;
+    --navy2:   #0F1E3A;
+    --navy3:   #162540;
+    --steel:   #1E3A5F;
+    --steel2:  #254870;
+    --teal:    #00D4AA;
+    --teal2:   #00B891;
+    --amber:   #FF6B35;
+    --amber2:  #E55A25;
+    --red:     #FF2D55;
+    --yellow:  #FFD60A;
+    --ghost:   #E8F4FD;
+    --muted:   #7B9BB5;
+    --border:  rgba(30,58,95,0.8);
+    --glow-t:  rgba(0,212,170,0.15);
+    --glow-a:  rgba(255,107,53,0.15);
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--navy);
+    color: var(--ghost);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,22,40,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 32px; height: 60px;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Rajdhani', sans-serif; font-weight: 700;
+    font-size: 20px; letter-spacing: 1px; color: var(--ghost);
+  }
+  .logo-icon {
+    width: 34px; height: 34px; background: linear-gradient(135deg, var(--teal), var(--steel2));
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .logo span { color: var(--teal); }
+  .topbar-center {
+    display: flex; gap: 4px;
+  }
+  .nav-btn {
+    padding: 6px 16px; border: none; border-radius: 6px;
+    background: transparent; color: var(--muted);
+    font-family: 'Rajdhani', sans-serif; font-weight: 600; font-size: 13px;
+    letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s;
+  }
+  .nav-btn:hover, .nav-btn.active {
+    background: var(--steel); color: var(--ghost);
+  }
+  .nav-btn.active { color: var(--teal); }
+  .topbar-right {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--teal); letter-spacing: 1px;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--teal);
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%,100% { opacity:1; transform:scale(1); }
+    50% { opacity:0.4; transform:scale(1.4); }
+  }
+  .clock {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    color: var(--muted); letter-spacing: 1px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    margin-top: 60px;
+    padding: 40px 32px 36px;
+    position: relative; overflow: hidden;
+    background: linear-gradient(180deg, var(--navy2) 0%, var(--navy) 100%);
+    border-bottom: 1px solid var(--border);
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: -80px; right: 80px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(0,212,170,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 32px; align-items: start;
+    max-width: 1400px; margin: 0 auto;
+  }
+  .hero-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 3px; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 10px;
+  }
+  .hero-h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 38px; font-weight: 700; line-height: 1.1;
+    color: var(--ghost); margin-bottom: 8px;
+  }
+  .hero-h1 em { color: var(--amber); font-style: normal; }
+  .hero-sub {
+    color: var(--muted); font-size: 13px; line-height: 1.6;
+    max-width: 520px; margin-bottom: 24px;
+  }
+  .kpi-row {
+    display: flex; gap: 16px; flex-wrap: wrap;
+  }
+  .kpi {
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px; min-width: 130px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .kpi:hover { border-color: var(--teal); }
+  .kpi.danger { border-left: 3px solid var(--red); }
+  .kpi.warning { border-left: 3px solid var(--amber); }
+  .kpi.ok { border-left: 3px solid var(--teal); }
+  .kpi-label {
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .kpi-val {
+    font-family: 'Rajdhani', sans-serif; font-size: 30px; font-weight: 700;
+    line-height: 1;
+  }
+  .kpi.danger .kpi-val { color: var(--red); }
+  .kpi.warning .kpi-val { color: var(--amber); }
+  .kpi.ok .kpi-val { color: var(--teal); }
+  .kpi-unit { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  /* Sonar widget */
+  .sonar-widget {
+    position: relative; width: 280px; height: 280px;
+    margin: 0 auto; flex-shrink: 0;
+  }
+  .sonar-svg {
+    width: 100%; height: 100%;
+  }
+  .sonar-ring {
+    fill: none; stroke: var(--teal); stroke-width: 0.8;
+    transform-origin: center;
+    animation: sonar-expand 3s ease-out infinite;
+    opacity: 0;
+  }
+  .sonar-ring:nth-child(2) { animation-delay: 1s; }
+  .sonar-ring:nth-child(3) { animation-delay: 2s; }
+  @keyframes sonar-expand {
+    0%   { r: 20; opacity: 0.8; }
+    100% { r: 120; opacity: 0; }
+  }
+  .sonar-center {
+    fill: none; stroke: var(--teal); stroke-width: 1.5;
+  }
+  .sonar-sweep {
+    transform-origin: 140px 140px;
+    animation: sweep 4s linear infinite;
+  }
+  @keyframes sweep { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+  .sonar-blip {
+    animation: blip 4s ease-in-out infinite;
+  }
+  @keyframes blip {
+    0%,80%,100% { opacity:0; r:3; }
+    40% { opacity:1; r:5; }
+  }
+  .sonar-label {
+    position: absolute; bottom: 8px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 2px; color: var(--teal); text-transform: uppercase;
+  }
+  .sonar-overlay-stats {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    text-align: center;
+  }
+  .sonar-depth {
+    font-family: 'Rajdhani', sans-serif; font-size: 22px;
+    font-weight: 700; color: var(--teal); line-height:1;
+  }
+  .sonar-dept-label {
+    font-size: 9px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--muted);
+  }
+
+  /* ── MAIN CONTENT ── */
+  .main { max-width: 1400px; margin: 0 auto; padding: 28px 32px; }
+
+  /* ── TABS ── */
+  .tab-container { margin-bottom: 24px; }
+  .tab-list {
+    display: flex; gap: 4px; flex-wrap: wrap;
+    border-bottom: 1px solid var(--border); padding-bottom: 0;
+  }
+  .tab-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 10px 18px; border: none; border-radius: 8px 8px 0 0;
+    background: transparent; color: var(--muted);
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 13px; letter-spacing: 0.5px;
+    cursor: pointer; transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--ghost); background: var(--navy3); }
+  .tab-btn.active {
+    color: var(--teal); background: var(--navy3);
+    border-bottom: 2px solid var(--teal);
+  }
+  .tab-icon { font-size: 15px; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ── PANEL HEADER ── */
+  .panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .panel-title {
+    font-family: 'Rajdhani', sans-serif; font-size: 22px;
+    font-weight: 700; color: var(--ghost);
+  }
+  .panel-title span { color: var(--teal); }
+  .panel-actions { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    padding: 8px 18px; border-radius: 7px; border: none;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 13px; letter-spacing: 0.5px; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    background: var(--teal); color: var(--navy);
+  }
+  .btn-primary:hover { background: var(--teal2); }
+  .btn-ghost {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--teal); color: var(--teal); }
+  .btn-danger {
+    background: rgba(255,45,85,0.15); border: 1px solid var(--red);
+    color: var(--red);
+  }
+  .btn-warning {
+    background: rgba(255,107,53,0.15); border: 1px solid var(--amber);
+    color: var(--amber);
+  }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--navy3); border: 1px solid var(--border);
+    border-radius: 7px; padding: 7px 12px;
+  }
+  .search-box input {
+    background: none; border: none; outline: none;
+    color: var(--ghost); font-family: 'Inter', sans-serif;
+    font-size: 13px; width: 200px;
+  }
+  .search-box input::placeholder { color: var(--muted); }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px;
+    margin-bottom: 24px;
+  }
+  .form-grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group label {
+    font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); font-weight: 500;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    background: var(--navy2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 9px 12px;
+    color: var(--ghost); font-family: 'Inter', sans-serif; font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--teal); box-shadow: 0 0 0 3px var(--glow-t);
+  }
+  .form-group select option { background: var(--navy2); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-footer {
+    display: flex; gap: 10px; margin-top: 20px;
+    padding-top: 16px; border-top: 1px solid var(--border);
+  }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: var(--navy2);
+    padding: 12px 16px; text-align: left;
+    font-family: 'Rajdhani', sans-serif; font-weight: 600;
+    font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--muted); white-space: nowrap;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr {
+    border-bottom: 1px solid rgba(30,58,95,0.4);
+    transition: background 0.15s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(30,58,95,0.3); }
+  tbody td {
+    padding: 11px 16px; font-size: 13px; color: var(--ghost);
+    vertical-align: middle;
+  }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--teal); }
+  .table-actions { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 28px; height: 28px; border-radius: 5px; border: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
+  }
+  .icon-btn.edit { background: rgba(0,212,170,0.1); color: var(--teal); }
+  .icon-btn.edit:hover { background: rgba(0,212,170,0.25); }
+  .icon-btn.del { background: rgba(255,45,85,0.1); color: var(--red); }
+  .icon-btn.del:hover { background: rgba(255,45,85,0.25); }
+
+  /* ── BADGES / PILLS ── */
+  .badge {
+    display: inline-block; padding: 3px 9px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .badge-active, .badge-operational, .badge-compliant, .badge-completed, .badge-successful {
+    background: rgba(0,212,170,0.15); color: var(--teal);
+    border: 1px solid rgba(0,212,170,0.3);
+  }
+  .badge-charging, .badge-pending, .badge-pending-review, .badge-partial, .badge-open {
+    background: rgba(255,214,10,0.12); color: var(--yellow);
+    border: 1px solid rgba(255,214,10,0.3);
+  }
+  .badge-repair, .badge-maintenance, .badge-expired, .badge-cancelled, .badge-unsuccessful, .badge-closed {
+    background: rgba(255,45,85,0.12); color: var(--red);
+    border: 1px solid rgba(255,45,85,0.3);
+  }
+  .badge-decommissioned, .badge-under-investigation {
+    background: rgba(123,155,181,0.15); color: var(--muted);
+    border: 1px solid rgba(123,155,181,0.3);
+  }
+  .severity-critical { color: var(--red); font-weight:700; }
+  .severity-high { color: var(--amber); font-weight:700; }
+  .severity-medium { color: var(--yellow); font-weight:600; }
+  .severity-low { color: var(--teal); font-weight:600; }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none; position: fixed;
+    inset: 0; z-index: 200;
+    background: rgba(10,22,40,0.85);
+    backdrop-filter: blur(6px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--navy2);
+    border: 1px solid var(--steel2);
+    border-radius: 14px; width: 680px; max-width: 95vw;
+    max-height: 88vh; overflow-y: auto;
+    padding: 28px; position: relative;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+    animation: modal-in 0.25s ease-out;
+  }
+  @keyframes modal-in {
+    from { transform:translateY(20px); opacity:0; }
+    to   { transform:translateY(0);    opacity:1; }
+  }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--steel); border: none;
+    color: var(--muted); font-size: 16px;
+    cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { background: var(--red); color: #fff; }
+  .modal-title {
+    font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700;
+    color: var(--ghost); margin-bottom: 20px;
+  }
+  .modal-title span { color: var(--teal); }
+
+  /* ── TOAST ── */
+  .toast-area {
+    position: fixed; bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 300;
+  }
+  .toast {
+    background: var(--navy3); border: 1px solid var(--teal);
+    border-left: 4px solid var(--teal);
+    border-radius: 8px; padding: 12px 18px;
+    font-size: 13px; color: var(--ghost);
+    animation: toast-in 0.3s ease-out, toast-out 0.3s 2.7s forwards;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    max-width: 320px;
+  }
+  .toast.error { border-color: var(--red); }
+  .toast.warning { border-color: var(--amber); }
+  @keyframes toast-in  { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+  @keyframes toast-out { from{opacity:1} to{opacity:0} }
+
+  /* ── DASHBOARD CARDS ── */
+  .dash-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px; margin-bottom: 24px;
+  }
+  .dash-card {
+    background: var(--navy3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .dash-card:hover { border-color: var(--teal); transform: translateY(-2px); }
+  .dash-card-icon { font-size: 28px; margin-bottom: 12px; }
+  .dash-card-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 4px;
+  }
+  .dash-card-val {
+    font-family: 'Rajdhani', sans-serif; font-size: 36px;
+    font-weight: 700; color: var(--ghost); line-height: 1;
+  }
+  .dash-card-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+  .alert-banner {
+    background: rgba(255,45,85,0.1);
+    border: 1px solid rgba(255,45,85,0.4);
+    border-left: 4px solid var(--red);
+    border-radius: 8px; padding: 12px 16px;
+    margin-bottom: 16px; font-size: 13px;
+    display: flex; align-items: center; gap: 10px; color: #ffa0b0;
+  }
+
+  /* section subtitle */
+  .section-sub {
+    font-size: 12px; color: var(--muted); margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  /* empty state */
+  .empty-state {
+    text-align: center; padding: 48px 24px;
+    color: var(--muted);
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state-text { font-size: 14px; }
+
+  /* Compliance bar */
+  .compliance-row {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+  }
+  .compliance-label { width: 160px; font-size: 12px; color: var(--muted); }
+  .compliance-bar-wrap {
+    flex: 1; background: var(--navy2); height: 6px; border-radius: 3px; overflow:hidden;
+  }
+  .compliance-bar { height: 100%; border-radius: 3px; transition: width 1s ease; }
+  .compliance-pct { width: 36px; text-align: right; font-size: 12px; font-weight: 600; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--navy2); }
+  ::-webkit-scrollbar-thumb { background: var(--steel2); border-radius: 3px; }
+
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .sonar-widget { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🤿</div>
+    TURBOSAFE
+  </div>
+  <nav class="topbar-center">
+    <button class="nav-btn active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('divers')">Divers</button>
+    <button class="nav-btn" onclick="showPage('turbines')">Turbines</button>
+    <button class="nav-btn" onclick="showPage('bots')">RescueBots</button>
+    <button class="nav-btn" onclick="showPage('maintenance')">Maintenance</button>
+    <button class="nav-btn" onclick="showPage('incidents')">Incidents</button>
+    <button class="nav-btn" onclick="showPage('rescue')">Rescue Ops</button>
+    <button class="nav-btn" onclick="showPage('equipment')">Equipment</button>
+  </nav>
+  <div class="topbar-right">
+    <div class="live-badge"><div class="live-dot"></div>LIVE MONITORING</div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="hero-section">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-title">TurboSafe: Wind Farm Safety System</div>
+      <h1 class="hero-h1">India's Offshore<br>Safety Command<br><em>Centre</em></h1>
+      <p class="hero-sub">Centralised rescue coordination, AI-bot dispatch, diver location tracking, equipment compliance monitoring and incident analysis for Gujarat offshore wind operations.</p>
+      <div class="kpi-row">
+        <div class="kpi danger">
+          <div class="kpi-label">Avg Response</div>
+          <div class="kpi-val">22</div>
+          <div class="kpi-unit">min · target: 4 min</div>
+        </div>
+        <div class="kpi warning">
+          <div class="kpi-label">Active Divers</div>
+          <div class="kpi-val" id="hero-divers">0</div>
+          <div class="kpi-unit">deployed today</div>
+        </div>
+        <div class="kpi ok">
+          <div class="kpi-label">Bots Online</div>
+          <div class="kpi-val" id="hero-bots">0</div>
+          <div class="kpi-unit">of fleet active</div>
+        </div>
+        <div class="kpi danger">
+          <div class="kpi-label">Open Incidents</div>
+          <div class="kpi-val" id="hero-incidents">0</div>
+          <div class="kpi-unit">unresolved</div>
+        </div>
+        <div class="kpi warning">
+          <div class="kpi-label">Compliance</div>
+          <div class="kpi-val" id="hero-compliance">--%</div>
+          <div class="kpi-unit">equipment valid</div>
+        </div>
+      </div>
+    </div>
+    <!-- Sonar -->
+    <div>
+      <div class="sonar-widget">
+        <svg class="sonar-svg" viewBox="0 0 280 280" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="sonar-bg" cx="50%" cy="50%">
+              <stop offset="0%" stop-color="#162540"/>
+              <stop offset="100%" stop-color="#0A1628"/>
+            </radialGradient>
+            <clipPath id="circle-clip">
+              <circle cx="140" cy="140" r="125"/>
+            </clipPath>
+          </defs>
+          <!-- background -->
+          <circle cx="140" cy="140" r="130" fill="url(#sonar-bg)" stroke="#1E3A5F" stroke-width="1"/>
+          <!-- grid rings -->
+          <circle cx="140" cy="140" r="40" fill="none" stroke="#1E3A5F" stroke-width="0.6"/>
+          <circle cx="140" cy="140" r="80" fill="none" stroke="#1E3A5F" stroke-width="0.6"/>
+          <circle cx="140" cy="140" r="120" fill="none" stroke="#1E3A5F" stroke-width="0.6"/>
+          <!-- cross hairs -->
+          <line x1="140" y1="15" x2="140" y2="265" stroke="#1E3A5F" stroke-width="0.5"/>
+          <line x1="15" y1="140" x2="265" y2="140" stroke="#1E3A5F" stroke-width="0.5"/>
+          <!-- sweep gradient clip -->
+          <g clip-path="url(#circle-clip)">
+            <!-- sweep wedge -->
+            <path class="sonar-sweep" d="M140,140 L260,140 A120,120 0 0,1 140,260 Z"
+              fill="url(#sweep-grad)" opacity="0.25"/>
+          </g>
+          <defs>
+            <radialGradient id="sweep-grad" cx="0%" cy="0%">
+              <stop offset="0%" stop-color="#00D4AA" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#00D4AA" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- sonar expanding rings -->
+          <circle class="sonar-ring" cx="140" cy="140" r="20" stroke="#00D4AA" stroke-width="1" fill="none"/>
+          <circle class="sonar-ring" cx="140" cy="140" r="20" stroke="#00D4AA" stroke-width="1" fill="none"/>
+          <circle class="sonar-ring" cx="140" cy="140" r="20" stroke="#00D4AA" stroke-width="1" fill="none"/>
+          <!-- blips (diver positions) -->
+          <circle class="sonar-blip" cx="180" cy="105" r="4" fill="#FF6B35"/>
+          <circle cx="180" cy="105" r="8" fill="none" stroke="#FF6B35" stroke-width="0.8" opacity="0.4"/>
+          <circle class="sonar-blip" cx="110" cy="170" r="4" fill="#00D4AA" style="animation-delay:1.5s"/>
+          <circle cx="110" cy="170" r="8" fill="none" stroke="#00D4AA" stroke-width="0.8" opacity="0.4"/>
+          <circle class="sonar-blip" cx="160" cy="195" r="3.5" fill="#FFD60A" style="animation-delay:0.8s"/>
+          <!-- centre -->
+          <circle cx="140" cy="140" r="5" fill="#00D4AA"/>
+          <circle cx="140" cy="140" r="12" fill="none" stroke="#00D4AA" stroke-width="1" opacity="0.5"/>
+          <!-- depth labels -->
+          <text x="145" y="102" fill="#7B9BB5" font-size="9" font-family="JetBrains Mono">5m</text>
+          <text x="145" y="62" fill="#7B9BB5" font-size="9" font-family="JetBrains Mono">10m</text>
+          <text x="145" y="22" fill="#7B9BB5" font-size="9" font-family="JetBrains Mono">15m</text>
+        </svg>
+        <div class="sonar-label">SONAR ACTIVE · 15m RANGE</div>
+        <div class="sonar-overlay-stats">
+          <div class="sonar-depth">3</div>
+          <div class="sonar-dept-label">SIGNALS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ═══════════════════ DASHBOARD ═══════════════════ -->
+<div id="page-dashboard" class="tab-panel active">
+  <div class="alert-banner">
+    ⚠️ <strong>CRITICAL ALERT:</strong> Incident #003 — Diver entanglement at Turbine GJ-A04. Bot RB-003 dispatched. Response in progress.
+  </div>
+  <div class="dash-grid">
+    <div class="dash-card">
+      <div class="dash-card-icon">🤿</div>
+      <div class="dash-card-label">Total Divers Registered</div>
+      <div class="dash-card-val" id="db-divers">0</div>
+      <div class="dash-card-sub">Active in Gujarat Zone</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-icon">💨</div>
+      <div class="dash-card-label">Turbine Units</div>
+      <div class="dash-card-val" id="db-turbines">0</div>
+      <div class="dash-card-sub">Offshore Gujarat</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-icon">🤖</div>
+      <div class="dash-card-label">RescueBots Active</div>
+      <div class="dash-card-val" id="db-bots">0</div>
+      <div class="dash-card-sub">Fleet status nominal</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-icon">📋</div>
+      <div class="dash-card-label">Scheduled Maintenance</div>
+      <div class="dash-card-val" id="db-maint">0</div>
+      <div class="dash-card-sub">Pending this week</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-icon">🚨</div>
+      <div class="dash-card-label">Total Incidents</div>
+      <div class="dash-card-val" id="db-inc">0</div>
+      <div class="dash-card-sub">Logged this quarter</div>
+    </div>
+    <div class="dash-card">
+      <div class="dash-card-icon">🛠️</div>
+      <div class="dash-card-label">Equipment Items</div>
+      <div class="dash-card-val" id="db-equip">0</div>
+      <div class="dash-card-sub">Total tracked</div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="form-card">
+      <div class="panel-title" style="margin-bottom:16px;font-size:16px;">Equipment Compliance</div>
+      <div id="compliance-bars">
+        <div class="section-sub">No equipment data yet. Add equipment to see compliance.</div>
+      </div>
+    </div>
+    <div class="form-card">
+      <div class="panel-title" style="margin-bottom:16px;font-size:16px;">Recent Incidents</div>
+      <div id="recent-incidents-list">
+        <div class="section-sub">No incidents logged yet.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ DIVERS ═══════════════════ -->
+<div id="page-divers" class="tab-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Diver <span>Technicians</span></div>
+      <div class="section-sub">DIVER_TECHNICIAN table — GUV-R 199 / GUV-R 126 / DGUV certified workforce</div>
+    </div>
+    <div class="panel-actions">
+      <div class="search-box">🔍 <input type="text" placeholder="Search divers..." id="search-divers" oninput="renderDivers()"></div>
+      <button class="btn btn-primary" onclick="openModal('modal-diver')">+ Add Diver</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Diver ID</th><th>Name</th><th>Certification</th>
+        <th>Contact</th><th>Experience</th><th>Dive Rating</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="tbl-divers"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ TURBINES ═══════════════════ -->
+<div id="page-turbines" class="tab-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Turbine <span>Units</span></div>
+      <div class="section-sub">TURBINE_UNIT table — Gujarat Zone offshore wind farm infrastructure</div>
+    </div>
+    <div class="panel-actions">
+      <div class="search-box">🔍 <input type="text" placeholder="Search turbines..." id="search-turbines" oninput="renderTurbines()"></div>
+      <button class="btn btn-primary" onclick="openModal('modal-turbine')">+ Add Turbine</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Turbine ID</th><th>Zone</th><th>Coordinates</th>
+        <th>Height (m)</th><th>Foundation Depth</th><th>Commissioned</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="tbl-turbines"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ BOTS ═══════════════════ -->
+<div id="page-bots" class="tab-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">RescueBot <span>Fleet</span></div>
+      <div class="section-sub">RESCUE_BOT table — Autonomous submersible diver-location units</div>
+    </div>
+    <div class="panel-actions">
+      <div class="search-box">🔍 <input type="text" placeholder="Search bots..." id="search-bots" oninput="renderBots()"></div>
+      <button class="btn btn-primary" onclick="openModal('modal-bot')">+ Add RescueBot</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Bot ID</th><th>Model</th><th>Sonar Range</th>
+        <th>Battery (mins)</th><th>Assigned Zone</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="tbl-bots"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAINTENANCE ═══════════════════ -->
+<div id="page-maintenance" class="tab-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Maintenance <span>Schedule</span></div>
+      <div class="section-sub">MAINTENANCE_SCHEDULE table — Turbine inspection and repair task assignments</div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-primary" onclick="openModal('modal-maintenance')">+ Schedule Task</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Turbine</th><th>Diver</th><th>Scheduled Date</th>
+        <th>Task Type</th><th>Depth (m)</th><th>Status</th><th>Notes</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="tbl-maintenance"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ INCIDENTS ═══════════════════ -->
+<div id="page-incidents" class="tab-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Incident <span>Reports</span></div>
+      <div class="section-sub">INCIDENT_REPORT table — All safety events with severity, depth, and visibility data</div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-danger" onclick="openModal('modal-incident')">🚨 Log Incident</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>ID</th><th>Turbine</th><th>Diver</th><th>Bot</th><th>Date/Time</th>
+        <th>Type</th><th>Severity</th><th>Depth</th><th>Visibility</th><th>Status</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="tbl-incidents"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ RESCUE OPS ═══════════════════ -->
+<div id="page-rescue" class="tab-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Rescue <span>Operations</span></div>
+      <div class="section-sub">RESCUE_OPERATION table — Bot-assisted rescue dispatch, response times and outcomes</div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-warning" onclick="openModal('modal-rescue')">⚡ Dispatch Rescue</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Rescue ID</th><th>Incident</th><th>Bot</th><th>Response Time</th>
+        <th>Rescue Team</th><th>Outcome</th><th>Date</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="tbl-rescue"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════ EQUIPMENT ═══════════════════ -->
+<div id="page-equipment" class="tab-panel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Equipment <span>Compliance</span></div>
+      <div class="section-sub">EQUIPMENT table — DGUV saltwater corrosion standard tracking, monsoon harnesses and sonar beacons</div>
+    </div>
+    <div class="panel-actions">
+      <div class="search-box">🔍 <input type="text" placeholder="Search equipment..." id="search-equip" oninput="renderEquipment()"></div>
+      <button class="btn btn-primary" onclick="openModal('modal-equipment')">+ Add Equipment</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>Equip ID</th><th>Diver</th><th>Equipment</th><th>Standard</th>
+        <th>Expiry</th><th>Saltwater Rating</th><th>Compliance</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="tbl-equipment"></tbody>
+    </table>
+  </div>
+</div>
+
+</main>
+
+<!-- ════════════════════════════════════
+     MODALS
+═════════════════════════════════════ -->
+
+<!-- DIVER MODAL -->
+<div class="modal-overlay" id="modal-diver">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-diver')">✕</button>
+    <div class="modal-title">Add <span>Diver Technician</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Diver ID *</label><input id="d-id" placeholder="e.g. DIV001"></div>
+      <div class="form-group"><label>Full Name *</label><input id="d-name" placeholder="e.g. Rajan Mehta"></div>
+      <div class="form-group"><label>Certification</label>
+        <select id="d-cert">
+          <option>GUV-R 199</option><option>GUV-R 126</option><option>DGUV</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Contact *</label><input id="d-contact" placeholder="+91 9XXXXXXXXX"></div>
+      <div class="form-group"><label>Experience (years)</label><input id="d-exp" type="number" min="0" placeholder="0"></div>
+      <div class="form-group"><label>Dive Rating</label>
+        <select id="d-rating">
+          <option>PADI Rescue Diver</option><option>CMAS ★★★</option><option>CMAS ★★</option>
+          <option>CMAS ★</option><option>SSI Divemaster</option><option>NAUI Master Diver</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Status</label>
+        <select id="d-status">
+          <option value="Active">Active</option><option value="Inactive">Inactive</option>
+          <option value="On Leave">On Leave</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-primary" onclick="saveDiver()">Save Diver</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-diver')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TURBINE MODAL -->
+<div class="modal-overlay" id="modal-turbine">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-turbine')">✕</button>
+    <div class="modal-title">Add <span>Turbine Unit</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Turbine ID *</label><input id="t-id" placeholder="e.g. TRB001"></div>
+      <div class="form-group"><label>Zone *</label>
+        <select id="t-zone">
+          <option>Gujarat Zone-A</option><option>Gujarat Zone-B</option>
+          <option>Gujarat Zone-C</option><option>Gujarat Zone-D</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Coordinates (Lat, Long)</label><input id="t-coords" placeholder="22.3072, 70.8022"></div>
+      <div class="form-group"><label>Tower Height (m)</label><input id="t-height" type="number" step="0.01" placeholder="120.00"></div>
+      <div class="form-group"><label>Foundation Depth (m)</label><input id="t-depth" type="number" step="0.01" placeholder="15.00"></div>
+      <div class="form-group"><label>Commissioned Date *</label><input id="t-date" type="date"></div>
+      <div class="form-group"><label>Current Status</label>
+        <select id="t-status">
+          <option>Operational</option><option>Under Maintenance</option><option>Decommissioned</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-primary" onclick="saveTurbine()">Save Turbine</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-turbine')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOT MODAL -->
+<div class="modal-overlay" id="modal-bot">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-bot')">✕</button>
+    <div class="modal-title">Add <span>RescueBot</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Bot ID *</label><input id="b-id" placeholder="e.g. BOT001"></div>
+      <div class="form-group"><label>Model *</label><input id="b-model" placeholder="e.g. RescueBot-MK2"></div>
+      <div class="form-group"><label>Sonar Range (m)</label><input id="b-sonar" type="number" step="0.01" placeholder="15.00"></div>
+      <div class="form-group"><label>Battery Life (mins)</label><input id="b-battery" type="number" placeholder="120"></div>
+      <div class="form-group"><label>Assigned Zone</label>
+        <select id="b-zone">
+          <option>Gujarat Zone-A</option><option>Gujarat Zone-B</option>
+          <option>Gujarat Zone-C</option><option>Gujarat Zone-D</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Operational Status</label>
+        <select id="b-status">
+          <option>Active</option><option>Charging</option><option>Under Repair</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-primary" onclick="saveBot()">Save RescueBot</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-bot')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAINTENANCE MODAL -->
+<div class="modal-overlay" id="modal-maintenance">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-maintenance')">✕</button>
+    <div class="modal-title">Schedule <span>Maintenance Task</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Turbine ID *</label>
+        <select id="m-turbine" id="m-turbine"></select>
+      </div>
+      <div class="form-group"><label>Diver ID *</label>
+        <select id="m-diver"></select>
+      </div>
+      <div class="form-group"><label>Scheduled Date *</label><input id="m-date" type="date"></div>
+      <div class="form-group"><label>Task Type</label>
+        <select id="m-task">
+          <option>Foundation Inspection</option><option>Blade Check</option>
+          <option>Cable Repair</option><option>Sonar Check</option>
+          <option>Corrosion Survey</option><option>Emergency Repair</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Working Depth (m)</label><input id="m-depth" type="number" step="0.01" placeholder="8.00"></div>
+      <div class="form-group"><label>Completion Status</label>
+        <select id="m-status">
+          <option>Pending</option><option>Completed</option><option>Cancelled</option>
+        </select>
+      </div>
+      <div class="form-group full"><label>Notes</label><textarea id="m-notes" placeholder="Optional remarks..."></textarea></div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-primary" onclick="saveMaintenance()">Save Schedule</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-maintenance')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- INCIDENT MODAL -->
+<div class="modal-overlay" id="modal-incident">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-incident')">✕</button>
+    <div class="modal-title">🚨 Log <span>Incident Report</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Turbine ID *</label><select id="i-turbine"></select></div>
+      <div class="form-group"><label>Diver ID *</label><select id="i-diver"></select></div>
+      <div class="form-group"><label>RescueBot (optional)</label><select id="i-bot"><option value="">— None —</option></select></div>
+      <div class="form-group"><label>Incident Date/Time</label><input id="i-date" type="datetime-local"></div>
+      <div class="form-group"><label>Incident Type</label>
+        <select id="i-type">
+          <option>Diver Fall</option><option>Entanglement</option>
+          <option>Storm Exposure</option><option>Equipment Failure</option>
+          <option>Decompression Sickness</option><option>Unconsciousness</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Severity</label>
+        <select id="i-severity">
+          <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Depth at Incident (m)</label><input id="i-depth" type="number" step="0.01" placeholder="12.50"></div>
+      <div class="form-group"><label>Visibility (m)</label><input id="i-vis" type="number" step="0.01" placeholder="3.00"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="i-status">
+          <option>Open</option><option>Under Investigation</option><option>Closed</option>
+        </select>
+      </div>
+      <div class="form-group full"><label>Description *</label><textarea id="i-desc" placeholder="Detailed description of the incident..."></textarea></div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-danger" onclick="saveIncident()">🚨 Log Incident</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-incident')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESCUE MODAL -->
+<div class="modal-overlay" id="modal-rescue">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-rescue')">✕</button>
+    <div class="modal-title">⚡ Dispatch <span>Rescue Operation</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Incident ID *</label><select id="r-incident"></select></div>
+      <div class="form-group"><label>RescueBot *</label><select id="r-bot"></select></div>
+      <div class="form-group"><label>Response Time (mins)</label><input id="r-time" type="number" step="0.01" placeholder="4.00"></div>
+      <div class="form-group"><label>Rescue Date *</label><input id="r-date" type="date"></div>
+      <div class="form-group full"><label>Rescue Team Members</label><input id="r-team" placeholder="Names or IDs of human rescuers..."></div>
+      <div class="form-group"><label>Outcome</label>
+        <select id="r-outcome">
+          <option>Successful</option><option>Partial</option><option>Unsuccessful</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-warning" onclick="saveRescue()">⚡ Dispatch</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-rescue')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- EQUIPMENT MODAL -->
+<div class="modal-overlay" id="modal-equipment">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-equipment')">✕</button>
+    <div class="modal-title">Add <span>Equipment Record</span></div>
+    <div class="form-grid">
+      <div class="form-group"><label>Diver ID *</label><select id="e-diver"></select></div>
+      <div class="form-group"><label>Equipment Name *</label>
+        <select id="e-name">
+          <option>Monsoon Harness</option><option>Submersible RescueBot</option>
+          <option>Sonar Beacon</option><option>Dive Helmet</option>
+          <option>BCD (Buoyancy Control)</option><option>Emergency Oxygen Kit</option>
+          <option>Saltwater Wetsuit</option><option>Depth Gauge (Digital)</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Standard</label>
+        <select id="e-standard">
+          <option>DGUV</option><option>GUV-R 199</option><option>GUV-R 126</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Expiry Date *</label><input id="e-expiry" type="date"></div>
+      <div class="form-group"><label>Saltwater Rating</label>
+        <select id="e-salt">
+          <option>ISO 20653</option><option>DGUV Corrosion Class A</option>
+          <option>DGUV Corrosion Class B</option><option>DGUV Corrosion Class C</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Compliance Status</label>
+        <select id="e-compliance">
+          <option>Compliant</option><option>Expired</option><option>Pending Review</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn btn-primary" onclick="saveEquipment()">Save Equipment</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-equipment')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST AREA -->
+<div class="toast-area" id="toast-area"></div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA STORE (in-memory)
+// ══════════════════════════════════════════════
+let data = {
+  divers: [
+    { id:'DIV001', name:'Rajan Mehta', cert:'GUV-R 199', contact:'+91 9876543210', exp:8, rating:'PADI Rescue Diver', status:'Active' },
+    { id:'DIV002', name:'Priya Sharma', cert:'DGUV', contact:'+91 9876543211', exp:5, rating:'CMAS ★★★', status:'Active' },
+    { id:'DIV003', name:'Arun Patel', cert:'GUV-R 126', contact:'+91 9876543212', exp:12, rating:'SSI Divemaster', status:'Active' },
+    { id:'DIV004', name:'Meera Nair', cert:'GUV-R 199', contact:'+91 9876543213', exp:3, rating:'CMAS ★★', status:'On Leave' },
+  ],
+  turbines: [
+    { id:'TRB001', zone:'Gujarat Zone-A', coords:'22.3072, 70.8022', height:120, depth:14, date:'2026-01-15', status:'Operational' },
+    { id:'TRB002', zone:'Gujarat Zone-A', coords:'22.3180, 70.8150', height:118, depth:13, date:'2026-01-15', status:'Operational' },
+    { id:'TRB003', zone:'Gujarat Zone-B', coords:'22.4012, 70.9200', height:122, depth:15, date:'2026-02-20', status:'Under Maintenance' },
+    { id:'TRB004', zone:'Gujarat Zone-B', coords:'22.4200, 70.9450', height:120, depth:14.5, date:'2026-02-20', status:'Operational' },
+  ],
+  bots: [
+    { id:'BOT001', model:'RescueBot-MK2', sonar:15.0, battery:180, zone:'Gujarat Zone-A', status:'Active' },
+    { id:'BOT002', model:'RescueBot-MK3', sonar:15.0, battery:240, zone:'Gujarat Zone-B', status:'Active' },
+    { id:'BOT003', model:'RescueBot-MK2', sonar:12.5, battery:150, zone:'Gujarat Zone-A', status:'Charging' },
+    { id:'BOT004', model:'AquaSearch-X1', sonar:10.0, battery:120, zone:'Gujarat Zone-C', status:'Under Repair' },
+  ],
+  maintenance: [
+    { id:1, turbine:'TRB001', diver:'DIV001', date:'2026-06-15', task:'Foundation Inspection', depth:12, status:'Pending', notes:'Monthly DGUV check' },
+    { id:2, turbine:'TRB002', diver:'DIV002', date:'2026-06-18', task:'Blade Check', depth:0, status:'Pending', notes:'' },
+    { id:3, turbine:'TRB003', diver:'DIV003', date:'2026-06-10', task:'Cable Repair', depth:8, status:'Completed', notes:'Repaired salt-corroded connector' },
+  ],
+  incidents: [
+    { id:1, turbine:'TRB001', diver:'DIV001', bot:'BOT001', date:'2026-06-09 11:32', type:'Equipment Failure', severity:'High', depth:10.5, vis:3.2, desc:'Sonar beacon failure at 10m depth during foundation survey.', status:'Under Investigation' },
+    { id:2, turbine:'TRB002', diver:'DIV002', bot:'', date:'2026-06-08 14:15', type:'Storm Exposure', severity:'Medium', depth:0, vis:null, desc:'High winds during blade inspection. Diver recovered safely.', status:'Closed' },
+    { id:3, turbine:'TRB004', diver:'DIV003', bot:'BOT003', date:'2026-06-11 09:00', type:'Entanglement', severity:'Critical', depth:12, vis:2.5, desc:'Diver entangled in mooring cable at 12m. RescueBot dispatched.', status:'Open' },
+  ],
+  rescue: [
+    { id:1, incident:1, bot:'BOT001', time:6.5, team:'Team Alpha: Karim, Singh', outcome:'Successful', date:'2026-06-09' },
+    { id:2, incident:2, bot:'BOT002', time:4.2, team:'Team Bravo: Nair, Rao', outcome:'Successful', date:'2026-06-08' },
+  ],
+  equipment: [
+    { id:1, diver:'DIV001', name:'Monsoon Harness', standard:'GUV-R 199', expiry:'2026-12-31', salt:'DGUV Corrosion Class A', compliance:'Compliant' },
+    { id:2, diver:'DIV001', name:'Sonar Beacon', standard:'DGUV', expiry:'2026-08-15', salt:'ISO 20653', compliance:'Compliant' },
+    { id:3, diver:'DIV002', name:'Monsoon Harness', standard:'GUV-R 199', expiry:'2026-05-01', salt:'DGUV Corrosion Class A', compliance:'Expired' },
+    { id:4, diver:'DIV003', name:'Submersible RescueBot', standard:'DGUV', expiry:'2027-03-10', salt:'ISO 20653', compliance:'Compliant' },
+    { id:5, diver:'DIV004', name:'Dive Helmet', standard:'GUV-R 126', expiry:'2026-07-01', salt:'DGUV Corrosion Class B', compliance:'Pending Review' },
+  ],
+  nextMaint: 4, nextInc: 4, nextRescue: 3, nextEquip: 6
+};
+
+// ══════════════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-IN', {hour12:false}) + ' IST';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ══════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════
+function showPage(page) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  event.target.classList.add('active');
+  if(page === 'maintenance') { populateSelectsMaintenance(); renderMaintenance(); }
+  if(page === 'incidents')   { populateSelectsIncident(); renderIncidents(); }
+  if(page === 'rescue')      { populateSelectsRescue(); renderRescue(); }
+  if(page === 'equipment')   { populateSelectsEquipment(); renderEquipment(); }
+  if(page === 'dashboard')   renderDashboard();
+  renderHeroKPIs();
+}
+
+// ══════════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════════
+function openModal(id) {
+  if(id==='modal-maintenance') populateSelectsMaintenance();
+  if(id==='modal-incident')   populateSelectsIncident();
+  if(id==='modal-rescue')     populateSelectsRescue();
+  if(id==='modal-equipment')  populateSelectsEquipment();
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if(e.target === o) o.classList.remove('open'); });
+});
+
+// ══════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════
+function toast(msg, type='') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = (type==='error'?'❌':type==='warning'?'⚠️':'✅') + ' ' + msg;
+  document.getElementById('toast-area').appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ══════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════
+function badge(val) {
+  const map = {
+    'active':'active','operational':'operational','compliant':'compliant','completed':'completed',
+    'successful':'successful','charging':'charging','pending':'pending','pending review':'pending-review',
+    'partial':'partial','open':'open','under repair':'repair','under maintenance':'maintenance',
+    'expired':'expired','cancelled':'cancelled','unsuccessful':'unsuccessful','closed':'closed',
+    'decommissioned':'decommissioned','under investigation':'under-investigation',
+    'on leave':'charging','inactive':'repair'
+  };
+  const k = (val||'').toLowerCase();
+  const cls = map[k] || 'charging';
+  return `<span class="badge badge-${cls}">${val}</span>`;
+}
+function severity(val) {
+  const map = {Critical:'severity-critical',High:'severity-high',Medium:'severity-medium',Low:'severity-low'};
+  return `<span class="${map[val]||''}">${val}</span>`;
+}
+function emptyRow(cols) {
+  return `<tr><td colspan="${cols}"><div class="empty-state"><div class="empty-state-icon">🌊</div><div class="empty-state-text">No records found. Add some data to get started.</div></div></td></tr>`;
+}
+function dname(id) { const d=data.divers.find(x=>x.id===id); return d?d.name:id; }
+function tname(id) { return id; }
+
+// ══════════════════════════════════════════════
+// POPULATE SELECTS
+// ══════════════════════════════════════════════
+function populateSelect(id, items, valKey, labelFn, allowEmpty=false) {
+  const s = document.getElementById(id); if(!s) return;
+  s.innerHTML = (allowEmpty?'<option value="">— None —</option>':'') +
+    items.map(i=>`<option value="${i[valKey]}">${labelFn(i)}</option>`).join('');
+}
+function populateSelectsMaintenance() {
+  populateSelect('m-turbine', data.turbines, 'id', i=>i.id+' — '+i.zone);
+  populateSelect('m-diver',   data.divers,   'id', i=>i.id+' — '+i.name);
+}
+function populateSelectsIncident() {
+  populateSelect('i-turbine', data.turbines, 'id', i=>i.id+' — '+i.zone);
+  populateSelect('i-diver',   data.divers,   'id', i=>i.id+' — '+i.name);
+  populateSelect('i-bot',     data.bots,     'id', i=>i.id+' '+i.model, true);
+}
+function populateSelectsRescue() {
+  populateSelect('r-incident', data.incidents, 'id', i=>'#'+i.id+' — '+i.type+' ('+i.severity+')');
+  populateSelect('r-bot',      data.bots.filter(b=>b.status==='Active'), 'id', i=>i.id+' '+i.model);
+}
+function populateSelectsEquipment() {
+  populateSelect('e-diver', data.divers, 'id', i=>i.id+' — '+i.name);
+}
+
+// ══════════════════════════════════════════════
+// RENDER TABLES
+// ══════════════════════════════════════════════
+function renderDivers() {
+  const q = (document.getElementById('search-divers')?.value||'').toLowerCase();
+  const rows = data.divers.filter(d=>
+    d.id.toLowerCase().includes(q)||d.name.toLowerCase().includes(q)||d.cert.toLowerCase().includes(q)
+  );
+  const tb = document.getElementById('tbl-divers');
+  tb.innerHTML = rows.length ? rows.map((d,i)=>`
+    <tr>
+      <td class="mono">${d.id}</td>
+      <td><strong>${d.name}</strong></td>
+      <td>${badge(d.cert)}</td>
+      <td>${d.contact}</td>
+      <td>${d.exp} yrs</td>
+      <td style="color:var(--muted);font-size:12px">${d.rating}</td>
+      <td>${badge(d.status)}</td>
+      <td><div class="table-actions">
+        <button class="icon-btn del" onclick="deleteDiver(${i})">🗑</button>
+      </div></td>
+    </tr>`).join('') : emptyRow(8);
+  renderHeroKPIs();
+}
+
+function renderTurbines() {
+  const q = (document.getElementById('search-turbines')?.value||'').toLowerCase();
+  const rows = data.turbines.filter(t=>t.id.toLowerCase().includes(q)||t.zone.toLowerCase().includes(q));
+  const tb = document.getElementById('tbl-turbines');
+  tb.innerHTML = rows.length ? rows.map((t,i)=>`
+    <tr>
+      <td class="mono">${t.id}</td>
+      <td>${t.zone}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)">${t.coords}</td>
+      <td>${t.height}m</td>
+      <td>${t.depth}m</td>
+      <td>${t.date}</td>
+      <td>${badge(t.status)}</td>
+      <td><div class="table-actions"><button class="icon-btn del" onclick="deleteTurbine(${i})">🗑</button></div></td>
+    </tr>`).join('') : emptyRow(8);
+  renderHeroKPIs();
+}
+
+function renderBots() {
+  const q = (document.getElementById('search-bots')?.value||'').toLowerCase();
+  const rows = data.bots.filter(b=>b.id.toLowerCase().includes(q)||b.model.toLowerCase().includes(q));
+  const tb = document.getElementById('tbl-bots');
+  tb.innerHTML = rows.length ? rows.map((b,i)=>`
+    <tr>
+      <td class="mono">${b.id}</td>
+      <td><strong>${b.model}</strong></td>
+      <td>${b.sonar}m</td>
+      <td>${b.battery} mins</td>
+      <td>${b.zone}</td>
+      <td>${badge(b.status)}</td>
+      <td><div class="table-actions"><button class="icon-btn del" onclick="deleteBot(${i})">🗑</button></div></td>
+    </tr>`).join('') : emptyRow(7);
+  renderHeroKPIs();
+}
+
+function renderMaintenance() {
+  const tb = document.getElementById('tbl-maintenance');
+  tb.innerHTML = data.maintenance.length ? data.maintenance.map((m,i)=>`
+    <tr>
+      <td class="mono">#${m.id}</td>
+      <td class="mono">${m.turbine}</td>
+      <td>${dname(m.diver)}</td>
+      <td>${m.date}</td>
+      <td>${m.task}</td>
+      <td>${m.depth}m</td>
+      <td>${badge(m.status)}</td>
+      <td style="max-width:180px;font-size:12px;color:var(--muted)">${m.notes||'—'}</td>
+      <td><div class="table-actions"><button class="icon-btn del" onclick="deleteMaint(${i})">🗑</button></div></td>
+    </tr>`).join('') : emptyRow(9);
+}
+
+function renderIncidents() {
+  const tb = document.getElementById('tbl-incidents');
+  tb.innerHTML = data.incidents.length ? data.incidents.map((inc,i)=>`
+    <tr>
+      <td class="mono">#${inc.id}</td>
+      <td class="mono">${inc.turbine}</td>
+      <td>${dname(inc.diver)}</td>
+      <td class="mono" style="font-size:11px">${inc.bot||'—'}</td>
+      <td style="font-size:12px;white-space:nowrap">${inc.date}</td>
+      <td style="font-size:12px">${inc.type}</td>
+      <td>${severity(inc.severity)}</td>
+      <td>${inc.depth}m</td>
+      <td>${inc.vis||'—'}m</td>
+      <td>${badge(inc.status)}</td>
+      <td><div class="table-actions"><button class="icon-btn del" onclick="deleteIncident(${i})">🗑</button></div></td>
+    </tr>`).join('') : emptyRow(11);
+  renderHeroKPIs();
+}
+
+function renderRescue() {
+  const tb = document.getElementById('tbl-rescue');
+  tb.innerHTML = data.rescue.length ? data.rescue.map((r,i)=>`
+    <tr>
+      <td class="mono">#${r.id}</td>
+      <td class="mono">#${r.incident}</td>
+      <td class="mono">${r.bot}</td>
+      <td style="${r.time<=4?'color:var(--teal)':'color:var(--amber)'}"><strong>${r.time} mins</strong></td>
+      <td style="font-size:12px;color:var(--muted)">${r.team}</td>
+      <td>${badge(r.outcome)}</td>
+      <td>${r.date}</td>
+      <td><div class="table-actions"><button class="icon-btn del" onclick="deleteRescue(${i})">🗑</button></div></td>
+    </tr>`).join('') : emptyRow(8);
+}
+
+function renderEquipment() {
+  const q = (document.getElementById('search-equip')?.value||'').toLowerCase();
+  const rows = data.equipment.filter(e=>
+    e.name.toLowerCase().includes(q)||e.diver.toLowerCase().includes(q)
+  );
+  const tb = document.getElementById('tbl-equipment');
+  tb.innerHTML = rows.length ? rows.map((e,i)=>`
+    <tr>
+      <td class="mono">#${e.id}</td>
+      <td>${dname(e.diver)}</td>
+      <td><strong>${e.name}</strong></td>
+      <td>${badge(e.standard)}</td>
+      <td style="${new Date(e.expiry)<new Date()?'color:var(--red)':''}">${e.expiry}</td>
+      <td style="font-size:12px;color:var(--muted)">${e.salt}</td>
+      <td>${badge(e.compliance)}</td>
+      <td><div class="table-actions"><button class="icon-btn del" onclick="deleteEquip(${i})">🗑</button></div></td>
+    </tr>`).join('') : emptyRow(8);
+  renderDashboard();
+}
+
+// ══════════════════════════════════════════════
+// HERO KPIs
+// ══════════════════════════════════════════════
+function renderHeroKPIs() {
+  document.getElementById('hero-divers').textContent = data.divers.filter(d=>d.status==='Active').length;
+  document.getElementById('hero-bots').textContent   = data.bots.filter(b=>b.status==='Active').length;
+  document.getElementById('hero-incidents').textContent = data.incidents.filter(i=>i.status==='Open').length;
+  const total = data.equipment.length;
+  const compliant = data.equipment.filter(e=>e.compliance==='Compliant').length;
+  document.getElementById('hero-compliance').textContent = total>0 ? Math.round(compliant/total*100)+'%' : '--%';
+}
+
+// ══════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════
+function renderDashboard() {
+  document.getElementById('db-divers').textContent   = data.divers.length;
+  document.getElementById('db-turbines').textContent = data.turbines.length;
+  document.getElementById('db-bots').textContent     = data.bots.filter(b=>b.status==='Active').length;
+  document.getElementById('db-maint').textContent    = data.maintenance.filter(m=>m.status==='Pending').length;
+  document.getElementById('db-inc').textContent      = data.incidents.length;
+  document.getElementById('db-equip').textContent    = data.equipment.length;
+
+  // Compliance bars
+  const types = ['Monsoon Harness','Sonar Beacon','Submersible RescueBot','Dive Helmet'];
+  const cb = document.getElementById('compliance-bars');
+  if(data.equipment.length === 0) {
+    cb.innerHTML = '<div class="section-sub">No equipment data yet.</div>';
+  } else {
+    const colors = {'Compliant':'var(--teal)','Expired':'var(--red)','Pending Review':'var(--yellow)'};
+    const summary = {};
+    data.equipment.forEach(e => {
+      if(!summary[e.compliance]) summary[e.compliance]=0;
+      summary[e.compliance]++;
+    });
+    const total = data.equipment.length;
+    cb.innerHTML = Object.entries(summary).map(([k,v])=>{
+      const pct = Math.round(v/total*100);
+      return `<div class="compliance-row">
+        <div class="compliance-label">${k}</div>
+        <div class="compliance-bar-wrap"><div class="compliance-bar" style="width:${pct}%;background:${colors[k]||'var(--muted)'}"></div></div>
+        <div class="compliance-pct" style="color:${colors[k]||'var(--muted)'}">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Recent incidents
+  const ri = document.getElementById('recent-incidents-list');
+  const recent = [...data.incidents].reverse().slice(0,4);
+  if(!recent.length) {
+    ri.innerHTML = '<div class="section-sub">No incidents logged yet.</div>';
+  } else {
+    ri.innerHTML = recent.map(inc=>`
+      <div style="padding:8px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+        <div style="flex:1">
+          <div style="font-size:13px"><strong>${inc.type}</strong> — ${dname(inc.diver)}</div>
+          <div style="font-size:11px;color:var(--muted)">${inc.date} · ${inc.turbine}</div>
+        </div>
+        ${severity(inc.severity)} ${badge(inc.status)}
+      </div>`).join('');
+  }
+  renderHeroKPIs();
+}
+
+// ══════════════════════════════════════════════
+// SAVE FUNCTIONS
+// ══════════════════════════════════════════════
+function saveDiver() {
+  const id = document.getElementById('d-id').value.trim();
+  const name = document.getElementById('d-name').value.trim();
+  if(!id||!name){toast('Diver ID and Name are required','error');return;}
+  if(data.divers.find(d=>d.id===id)){toast('Diver ID already exists','error');return;}
+  data.divers.push({
+    id, name,
+    cert: document.getElementById('d-cert').value,
+    contact: document.getElementById('d-contact').value,
+    exp: parseInt(document.getElementById('d-exp').value)||0,
+    rating: document.getElementById('d-rating').value,
+    status: document.getElementById('d-status').value
+  });
+  closeModal('modal-diver');
+  renderDivers(); renderDashboard();
+  toast(`Diver ${name} added successfully`);
+  ['d-id','d-name','d-contact','d-exp'].forEach(id=>document.getElementById(id).value='');
+}
+
+function saveTurbine() {
+  const id = document.getElementById('t-id').value.trim();
+  if(!id){toast('Turbine ID required','error');return;}
+  if(data.turbines.find(t=>t.id===id)){toast('Turbine ID already exists','error');return;}
+  data.turbines.push({
+    id, zone: document.getElementById('t-zone').value,
+    coords: document.getElementById('t-coords').value,
+    height: parseFloat(document.getElementById('t-height').value)||0,
+    depth: parseFloat(document.getElementById('t-depth').value)||0,
+    date: document.getElementById('t-date').value,
+    status: document.getElementById('t-status').value
+  });
+  closeModal('modal-turbine');
+  renderTurbines(); renderDashboard();
+  toast(`Turbine ${id} registered`);
+}
+
+function saveBot() {
+  const id = document.getElementById('b-id').value.trim();
+  if(!id){toast('Bot ID required','error');return;}
+  if(data.bots.find(b=>b.id===id)){toast('Bot ID already exists','error');return;}
+  data.bots.push({
+    id, model: document.getElementById('b-model').value,
+    sonar: parseFloat(document.getElementById('b-sonar').value)||0,
+    battery: parseInt(document.getElementById('b-battery').value)||0,
+    zone: document.getElementById('b-zone').value,
+    status: document.getElementById('b-status').value
+  });
+  closeModal('modal-bot');
+  renderBots(); renderDashboard();
+  toast(`RescueBot ${id} added to fleet`);
+}
+
+function saveMaintenance() {
+  const turbine = document.getElementById('m-turbine').value;
+  const diver   = document.getElementById('m-diver').value;
+  const date    = document.getElementById('m-date').value;
+  if(!turbine||!diver||!date){toast('Turbine, Diver, and Date required','error');return;}
+  data.maintenance.push({
+    id: data.nextMaint++, turbine, diver, date,
+    task: document.getElementById('m-task').value,
+    depth: parseFloat(document.getElementById('m-depth').value)||0,
+    status: document.getElementById('m-status').value,
+    notes: document.getElementById('m-notes').value
+  });
+  closeModal('modal-maintenance');
+  renderMaintenance(); renderDashboard();
+  toast('Maintenance task scheduled');
+}
+
+function saveIncident() {
+  const turbine = document.getElementById('i-turbine').value;
+  const diver   = document.getElementById('i-diver').value;
+  const desc    = document.getElementById('i-desc').value.trim();
+  if(!turbine||!diver||!desc){toast('Turbine, Diver, and Description required','error');return;}
+  const inc = {
+    id: data.nextInc++, turbine, diver,
+    bot: document.getElementById('i-bot').value,
+    date: document.getElementById('i-date').value || new Date().toISOString().slice(0,16).replace('T',' '),
+    type: document.getElementById('i-type').value,
+    severity: document.getElementById('i-severity').value,
+    depth: parseFloat(document.getElementById('i-depth').value)||0,
+    vis: parseFloat(document.getElementById('i-vis').value)||null,
+    desc, status: document.getElementById('i-status').value
+  };
+  data.incidents.push(inc);
+  if(inc.severity==='Critical') toast('⚠️ CRITICAL incident logged — consider immediate dispatch','warning');
+  else toast('Incident logged');
+  closeModal('modal-incident');
+  renderIncidents(); renderDashboard();
+}
+
+function saveRescue() {
+  const incident = document.getElementById('r-incident').value;
+  const bot      = document.getElementById('r-bot').value;
+  const date     = document.getElementById('r-date').value;
+  if(!incident||!bot||!date){toast('Incident, Bot, and Date required','error');return;}
+  const time = parseFloat(document.getElementById('r-time').value)||0;
+  data.rescue.push({
+    id: data.nextRescue++, incident, bot, time,
+    team: document.getElementById('r-team').value,
+    outcome: document.getElementById('r-outcome').value,
+    date
+  });
+  closeModal('modal-rescue');
+  renderRescue(); renderDashboard();
+  if(time <= 4) toast(`🎯 Rescue completed in ${time} min — meets gold standard`);
+  else toast(`Rescue operation recorded (${time} min response)`,'warning');
+}
+
+function saveEquipment() {
+  const diver = document.getElementById('e-diver').value;
+  const expiry = document.getElementById('e-expiry').value;
+  if(!diver||!expiry){toast('Diver and Expiry Date required','error');return;}
+  data.equipment.push({
+    id: data.nextEquip++, diver,
+    name: document.getElementById('e-name').value,
+    standard: document.getElementById('e-standard').value,
+    expiry,
+    salt: document.getElementById('e-salt').value,
+    compliance: document.getElementById('e-compliance').value
+  });
+  closeModal('modal-equipment');
+  renderEquipment();
+  toast('Equipment record saved');
+}
+
+// ══════════════════════════════════════════════
+// DELETE
+// ══════════════════════════════════════════════
+function deleteDiver(i)   { if(confirm('Delete this diver?'))    { data.divers.splice(i,1);      renderDivers();      toast('Diver removed','warning'); } }
+function deleteTurbine(i) { if(confirm('Delete this turbine?'))  { data.turbines.splice(i,1);    renderTurbines();    toast('Turbine removed','warning'); } }
+function deleteBot(i)     { if(confirm('Delete this bot?'))      { data.bots.splice(i,1);        renderBots();        toast('Bot removed','warning'); } }
+function deleteMaint(i)   { if(confirm('Delete this schedule?')) { data.maintenance.splice(i,1); renderMaintenance(); toast('Schedule removed','warning'); } }
+function deleteIncident(i){ if(confirm('Delete incident?'))      { data.incidents.splice(i,1);   renderIncidents();   toast('Incident removed','warning'); } }
+function deleteRescue(i)  { if(confirm('Delete rescue op?'))     { data.rescue.splice(i,1);      renderRescue();      toast('Rescue op removed','warning'); } }
+function deleteEquip(i)   { if(confirm('Delete equipment?'))     { data.equipment.splice(i,1);   renderEquipment();   toast('Equipment removed','warning'); } }
+
+// ══════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════
+renderDivers();
+renderTurbines();
+renderBots();
+renderDashboard();
+</script>
+</body>
+</html>

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Manhole Monitoring System</title>
+<style>
+  :root{
+    --iron-900:#15181b;
+    --iron-800:#1d2126;
+    --iron-700:#2a2f35;
+    --iron-600:#3a4149;
+    --iron-500:#565f68;
+    --paper:#e9e5da;
+    --paper-dim:#a9a495;
+    --amber:#d99a3c;
+    --amber-dim:#8a6a35;
+    --safe:#5fa579;
+    --alert:#c85a4f;
+    --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    box-sizing:border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  html{height:100%; scroll-padding-top: env(safe-area-inset-top, 0px);}
+  body{
+    min-height:100%;
+    margin:0;
+    background:
+      radial-gradient(ellipse at 20% -10%, #23282e 0%, transparent 55%),
+      var(--iron-900);
+    color:var(--paper);
+    font-family:var(--sans);
+    padding:32px 20px 60px;
+  }
+
+  .wrap{max-width:920px; margin:0 auto;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:16px;
+    border-bottom:1px solid var(--iron-600);
+    padding-bottom:20px;
+    margin-bottom:28px;
+  }
+  h1{
+    font-size:clamp(1.4rem, 3vw, 1.9rem);
+    font-weight:600;
+    margin:0 0 6px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--paper-dim);
+    font-size:0.92rem;
+    margin:0;
+  }
+  .conn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--mono);
+    font-size:0.82rem;
+    color:var(--paper-dim);
+  }
+  .dot{width:8px; height:8px; border-radius:50%; background:var(--safe); box-shadow:0 0 8px var(--safe);}
+  .dot.off{background:var(--iron-500); box-shadow:none;}
+
+  .banner{
+    display:none;
+    align-items:center;
+    gap:10px;
+    background:#3a2320;
+    border:1px solid var(--alert);
+    color:#f0c4bd;
+    padding:12px 16px;
+    border-radius:6px;
+    font-size:0.9rem;
+    margin-bottom:22px;
+  }
+  .banner.show{display:flex;}
+  .banner b{color:var(--alert); font-weight:700;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:1.1fr 1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:720px){
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:var(--iron-800);
+    border:1px solid var(--iron-600);
+    border-radius:8px;
+    padding:20px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+  }
+  .card-title{
+    font-size:0.78rem;
+    color:var(--paper-dim);
+    letter-spacing:0.02em;
+  }
+  .status-pill{
+    font-family:var(--mono);
+    font-size:0.72rem;
+    padding:3px 8px;
+    border-radius:20px;
+    background:var(--iron-700);
+    color:var(--safe);
+    border:1px solid var(--iron-600);
+  }
+  .status-pill.warn{color:var(--amber); }
+  .status-pill.bad{color:var(--alert);}
+
+  .reading{
+    font-family:var(--mono);
+    font-size:2.4rem;
+    font-weight:600;
+    line-height:1;
+    margin:6px 0 2px;
+  }
+  .unit{font-size:1rem; color:var(--paper-dim); font-weight:400;}
+  .desc{font-size:0.82rem; color:var(--paper-dim); margin-top:6px;}
+
+  /* Gas card gauge */
+  .bar-track{
+    height:8px;
+    background:var(--iron-700);
+    border-radius:4px;
+    margin-top:16px;
+    overflow:hidden;
+  }
+  .bar-fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--safe), var(--amber));
+    width:0%;
+    transition:width 0.5s ease;
+  }
+
+  /* Manhole visual */
+  .manhole-card{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+  }
+  .cover-svg{width:150px; height:150px; margin-bottom:10px;}
+  .cover-status{
+    font-family:var(--mono);
+    font-size:0.95rem;
+    font-weight:600;
+    color:var(--safe);
+    letter-spacing:0.02em;
+  }
+  .cover-status.bad{color:var(--alert);}
+  .cover-sub{font-size:0.78rem; color:var(--paper-dim); margin-top:4px;}
+
+  /* controls */
+  .controls{
+    margin-top:28px;
+    background:var(--iron-800);
+    border:1px solid var(--iron-600);
+    border-radius:8px;
+    padding:18px 20px;
+  }
+  .controls-head{
+    font-size:0.78rem;
+    color:var(--paper-dim);
+    margin-bottom:12px;
+  }
+  .ctrl-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .ctrl-row + .ctrl-row{margin-top:14px;}
+  label.field{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:0.85rem;
+    color:var(--paper-dim);
+  }
+  input[type="range"]{
+    accent-color:var(--amber);
+    width:160px;
+  }
+  button{
+    font-family:var(--sans);
+    font-size:0.85rem;
+    padding:9px 16px;
+    border-radius:6px;
+    border:1px solid var(--iron-600);
+    background:var(--iron-700);
+    color:var(--paper);
+    cursor:pointer;
+  }
+  button:hover{border-color:var(--amber-dim); color:var(--amber);}
+  button.primary{
+    background:var(--amber-dim);
+    border-color:var(--amber-dim);
+    color:#fff5e6;
+  }
+  button.primary:hover{background:var(--amber); border-color:var(--amber); color:#241a08;}
+  button.toggle-on{background:var(--iron-600); color:var(--paper);}
+
+  footer{
+    text-align:center;
+    color:var(--iron-500);
+    font-size:0.75rem;
+    margin-top:36px;
+    font-family:var(--mono);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Manhole Monitoring System</h1>
+      <p class="sub">Live view of gas, water level, and tilt sensor readings</p>
+    </div>
+    <div class="conn">
+      <span class="dot" id="connDot"></span>
+      <span id="connLabel">Simulated feed running</span>
+    </div>
+  </header>
+
+  <div class="banner" id="alertBanner">
+    <span>⚠</span>
+    <span id="alertText"><b>Gas leakage detected.</b> Reading above safe threshold.</span>
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">GAS LEVEL — MQ2 SENSOR</span>
+        <span class="status-pill" id="gasPill">NORMAL</span>
+      </div>
+      <div class="reading"><span id="gasVal">0</span><span class="unit"> ppm (raw)</span></div>
+      <div class="desc">Alert triggers above 500</div>
+      <div class="bar-track"><div class="bar-fill" id="gasBar"></div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">WATER LEVEL — ULTRASONIC</span>
+        <span class="status-pill" id="waterPill">NORMAL</span>
+      </div>
+      <div class="reading"><span id="distVal">0</span><span class="unit"> cm</span></div>
+      <div class="desc">Distance from sensor to water surface. Lower = fuller.</div>
+      <div class="bar-track"><div class="bar-fill" id="waterBar"></div></div>
+    </div>
+
+    <div class="card manhole-card">
+      <svg class="cover-svg" id="coverSvg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="#2a2f35" stroke="#565f68" stroke-width="2"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#3a4149" stroke-width="1.5"/>
+        <circle cx="50" cy="50" r="30" fill="none" stroke="#3a4149" stroke-width="1.5"/>
+        <g id="coverBolts" stroke="#565f68" stroke-width="6" stroke-linecap="round">
+          <line x1="50" y1="12" x2="50" y2="20"/>
+          <line x1="88" y1="50" x2="80" y2="50"/>
+          <line x1="50" y1="88" x2="50" y2="80"/>
+          <line x1="12" y1="50" x2="20" y2="50"/>
+        </g>
+        <circle cx="50" cy="50" r="4" fill="#5fa579" id="coverCenter"/>
+      </svg>
+      <div class="cover-status" id="tiltStatus">COVER SECURE</div>
+      <div class="cover-sub" id="tiltSub">Tilt sensor: no movement detected</div>
+    </div>
+
+  </div>
+
+  <div class="controls">
+    <div class="controls-head">SIMULATOR — no hardware connected, adjust readings manually</div>
+    <div class="ctrl-row">
+      <label class="field">Gas reading
+        <input type="range" id="gasSlider" min="0" max="1000" value="180">
+        <span id="gasSliderVal" style="font-family:var(--mono); width:44px;">180</span>
+      </label>
+      <label class="field">Water distance (cm)
+        <input type="range" id="distSlider" min="0" max="20" value="14">
+        <span id="distSliderVal" style="font-family:var(--mono); width:44px;">14</span>
+      </label>
+      <button id="tiltBtn">Simulate tilt event</button>
+    </div>
+    <div class="ctrl-row">
+      <button id="autoBtn" class="primary">Pause live drift</button>
+      <button id="spikeBtn">Trigger gas spike</button>
+      <button id="floodBtn">Trigger high water level</button>
+    </div>
+  </div>
+
+  <footer>ESP8266 · NewPing · Blynk virtual pins V0 (gas) · V1 (distance) · D14 (tilt)</footer>
+</div>
+
+<script>
+(function(){
+  const gasVal = document.getElementById('gasVal');
+  const gasBar = document.getElementById('gasBar');
+  const gasPill = document.getElementById('gasPill');
+  const distVal = document.getElementById('distVal');
+  const waterBar = document.getElementById('waterBar');
+  const waterPill = document.getElementById('waterPill');
+  const tiltStatus = document.getElementById('tiltStatus');
+  const tiltSub = document.getElementById('tiltSub');
+  const coverCenter = document.getElementById('coverCenter');
+  const banner = document.getElementById('alertBanner');
+  const alertText = document.getElementById('alertText');
+  const connDot = document.getElementById('connDot');
+  const connLabel = document.getElementById('connLabel');
+
+  const gasSlider = document.getElementById('gasSlider');
+  const gasSliderVal = document.getElementById('gasSliderVal');
+  const distSlider = document.getElementById('distSlider');
+  const distSliderVal = document.getElementById('distSliderVal');
+  const tiltBtn = document.getElementById('tiltBtn');
+  const autoBtn = document.getElementById('autoBtn');
+  const spikeBtn = document.getElementById('spikeBtn');
+  const floodBtn = document.getElementById('floodBtn');
+
+  const MAX_DISTANCE = 20; // matches NewPing MAX_DISTANCE in the sketch
+  const GAS_THRESHOLD = 500; // matches sensorThres in the sketch, not the ">20" bug in sendGSensor()
+
+  let gas = 180;
+  let dist = 14;
+  let tilted = false;
+  let autoRunning = true;
+  let tiltTimeout = null;
+
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+
+  function render(){
+    // Gas
+    gasVal.textContent = Math.round(gas);
+    gasBar.style.width = clamp((gas/1000)*100, 0, 100) + '%';
+    const gasBad = gas > GAS_THRESHOLD;
+    gasPill.textContent = gasBad ? 'ALERT' : (gas > 300 ? 'ELEVATED' : 'NORMAL');
+    gasPill.className = 'status-pill ' + (gasBad ? 'bad' : (gas > 300 ? 'warn' : ''));
+
+    // Water / distance -- smaller distance means fuller manhole
+    distVal.textContent = Math.round(dist * 10) / 10;
+    const fillPct = clamp(100 - (dist/MAX_DISTANCE)*100, 0, 100);
+    waterBar.style.width = fillPct + '%';
+    const waterBad = dist < 4;
+    const waterWarn = dist < 8;
+    waterPill.textContent = waterBad ? 'HIGH LEVEL' : (waterWarn ? 'RISING' : 'NORMAL');
+    waterPill.className = 'status-pill ' + (waterBad ? 'bad' : (waterWarn ? 'warn' : ''));
+
+    // Tilt / cover
+    if(tilted){
+      tiltStatus.textContent = 'TILT DETECTED';
+      tiltStatus.className = 'cover-status bad';
+      tiltSub.textContent = 'Cover displaced — LED indicator off';
+      coverCenter.setAttribute('fill', '#c85a4f');
+    } else {
+      tiltStatus.textContent = 'COVER SECURE';
+      tiltStatus.className = 'cover-status';
+      tiltSub.textContent = 'Tilt sensor: no movement detected';
+      coverCenter.setAttribute('fill', '#5fa579');
+    }
+
+    // Banner — show worst active alert
+    if(gasBad){
+      banner.classList.add('show');
+      alertText.innerHTML = '<b>Gas leakage detected.</b> Reading above safe threshold (' + GAS_THRESHOLD + ').';
+    } else if(waterBad){
+      banner.classList.add('show');
+      alertText.innerHTML = '<b>High water level.</b> Manhole may be near overflow.';
+    } else if(tilted){
+      banner.classList.add('show');
+      alertText.innerHTML = '<b>Cover tilt detected.</b> Manhole cover may be open or displaced.';
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  function syncSliders(){
+    gasSlider.value = Math.round(gas);
+    gasSliderVal.textContent = Math.round(gas);
+    distSlider.value = Math.round(dist);
+    distSliderVal.textContent = Math.round(dist);
+  }
+
+  gasSlider.addEventListener('input', () => {
+    gas = Number(gasSlider.value);
+    gasSliderVal.textContent = gasSlider.value;
+    render();
+  });
+  distSlider.addEventListener('input', () => {
+    dist = Number(distSlider.value);
+    distSliderVal.textContent = distSlider.value;
+    render();
+  });
+
+  tiltBtn.addEventListener('click', () => {
+    tilted = true;
+    clearTimeout(tiltTimeout);
+    render();
+    tiltTimeout = setTimeout(() => { tilted = false; render(); }, 4000);
+  });
+
+  spikeBtn.addEventListener('click', () => {
+    gas = 720;
+    syncSliders();
+    render();
+  });
+
+  floodBtn.addEventListener('click', () => {
+    dist = 2;
+    syncSliders();
+    render();
+  });
+
+  autoBtn.addEventListener('click', () => {
+    autoRunning = !autoRunning;
+    autoBtn.textContent = autoRunning ? 'Pause live drift' : 'Resume live drift';
+    autoBtn.classList.toggle('toggle-on', !autoRunning);
+    connDot.classList.toggle('off', !autoRunning);
+    connLabel.textContent = autoRunning ? 'Simulated feed running' : 'Feed paused';
+  });
+
+  // gentle random drift to feel "live", like real sensor noise
+  setInterval(() => {
+    if(!autoRunning) return;
+    gas = clamp(gas + (Math.random()-0.5)*30, 0, 1000);
+    dist = clamp(dist + (Math.random()-0.5)*0.8, 0, MAX_DISTANCE);
+    syncSliders();
+    render();
+  }, 1200);
+
+  render();
+})();
+</script>
+</body>
+</html>
